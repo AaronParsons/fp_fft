@@ -14,16 +14,21 @@ class FixedPointType:
         fpt = self.promote(fpt)
         fpt.bit_width += 1
         return fpt
-    def __mult__(self, fpt):
+    def __mul__(self, fpt):
         bit_width = self.bit_width + fpt.bit_width
         bin_point = self.bin_point + fpt.bin_point
         return FixedPointType(bit_width, bin_point)
-    def cast(self, data, fpt_in):
-        if fpt_in.bin_point > self.bin_point:
-            data = data >> (fpt_in.bin_point - self.bin_point)
-        else:
-            data = data << (self.bin_point - fpt_in.bin_point)
-        data = data % self.bit_width
+    def to_float(self, data):
+        data = (data % 2**self.bit_width).astype(np.float)
+        data /= 2**self.bin_point
+        return data
+    def cast(self, data, fpt_in=None):
+        if fpt_in is not None:
+            if fpt_in.bin_point > self.bin_point:
+                data = data >> (fpt_in.bin_point - self.bin_point)
+            else:
+                data = data << (self.bin_point - fpt_in.bin_point)
+        data = data % 2**self.bit_width
         return data
 
 #def butterfly_r2(d_in, stage, dtype_in, dtype_out, dtype_tw):
