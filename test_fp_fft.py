@@ -1,8 +1,9 @@
 import unittest
 import numpy as np
+from fp_type import FixedPointType
 import fp_fft
 
-class TestFixedPointType(unittest.TestCase):
+class TestFFT(unittest.TestCase):
     def test_reshape_r2(self):
         data = np.arange(8)
         top, bot = fp_fft.reshape_r2(data, 1)
@@ -18,7 +19,65 @@ class TestFixedPointType(unittest.TestCase):
         top, bot = fp_fft.reshape_r2(data, 1)
         np.testing.assert_equal(top, np.array([[0,1],[0,1]]))
         np.testing.assert_equal(bot, np.array([[2,3],[2,3]]))
-        
+    def test_unreshape_r2(self):
+        top, bot = np.array([0,1,2,3]), np.array([4,5,6,7])
+        data = fp_fft.unreshape_r2(top, bot, 1)
+        np.testing.assert_equal(data, np.arange(8))
+        top, bot = np.array([0,1,4,5]), np.array([2,3,6,7])
+        data = fp_fft.unreshape_r2(top, bot, 2)
+        np.testing.assert_equal(data, np.arange(8))
+        top, bot = np.array([0,2,4,6]), np.array([1,3,5,7])
+        data = fp_fft.unreshape_r2(top, bot, 3)
+        np.testing.assert_equal(data, np.arange(8))
+        top, bot = np.array([[0,1],[0,1]]), np.array([[2,3],[2,3]])
+        data = fp_fft.unreshape_r2(top, bot, 1)
+        np.testing.assert_equal(data, np.array([np.arange(4), np.arange(4)]))
+    def test_bit_reverse(self):
+        data = np.arange(8)
+        np.testing.assert_equal(fp_fft.bit_reverse(data, 3), np.array([0,4,2,6,1,5,3,7]))
+    def test_twiddle_r2(self):
+        fpt = FixedPointType(18, 17)
+        tw_r, tw_i = fp_fft.twiddle_r2(1, 3, fpt)
+        self.assertEqual(tw_r.shape, (4,))
+        self.assertEqual(tw_i.shape, (4,))
+        theta = np.arctan2(fpt.to_float(tw_i), fpt.to_float(tw_r))
+        np.testing.assert_almost_equal(theta, np.array([0, 0, 0, 0]))
+        tw_r, tw_i = fp_fft.twiddle_r2(2, 3, fpt)
+        theta = np.arctan2(fpt.to_float(tw_i), fpt.to_float(tw_r))
+        np.testing.assert_almost_equal(theta, np.array([0, 0, -np.pi/2, -np.pi/2]))
+        tw_r, tw_i = fp_fft.twiddle_r2(3, 3, fpt)
+        theta = np.arctan2(fpt.to_float(tw_i), fpt.to_float(tw_r))
+        np.testing.assert_almost_equal(theta, np.array([0, -np.pi/2, -np.pi/4, -3*np.pi/4]))
+    def test_butterfly_4pt_0f(self):
+        d_real = np.array([1, 1, 1, 1])
+        d_imag = np.array([0, 0, 0, 0])
+        fpt = FixedPointType(8, 7)
+        out_real, out_imag = fp_fft.butterfly_r2(d_real, d_imag, 1, 2, fpt, fpt, fpt)
+        np.testing.assert_equal(out_real, np.array([2, 2, 0, 0]))
+        np.testing.assert_equal(out_imag, np.array([0, 0, 0, 0]))
+        out_real, out_imag = fp_fft.butterfly_r2(out_real, out_imag, 2, 2, fpt, fpt, fpt)
+        np.testing.assert_equal(out_real, np.array([4, 0, 0, 0]))
+        np.testing.assert_equal(out_imag, np.array([0, 0, 0, 0]))
+    def test_butterfly_4pt_1f(self):
+        d_real = np.array([1, 0, -1, 0])
+        d_imag = np.array([0, 1, 0, -1])
+        fpt = FixedPointType(8, 7)
+        out_real, out_imag = fp_fft.butterfly_r2(d_real, d_imag, 1, 2, fpt, fpt, fpt)
+        np.testing.assert_equal(out_real, np.array([0, 0, 2, 0]))
+        np.testing.assert_equal(out_imag, np.array([0, 0, 0, 2]))
+        out_real, out_imag = fp_fft.butterfly_r2(out_real, out_imag, 2, 2, fpt, fpt, fpt)
+        np.testing.assert_equal(out_real, np.array([0, 0, 4, 0]))
+        np.testing.assert_equal(out_imag, np.array([0, 0, 0, 0]))
+    def test_butterfly_4pt_neg1f(self):
+        d_real = np.array([1, 0, -1, 0])
+        d_imag = np.array([0, -1, 0, 1])
+        fpt = FixedPointType(8, 7)
+        out_real, out_imag = fp_fft.butterfly_r2(d_real, d_imag, 1, 2, fpt, fpt, fpt)
+        np.testing.assert_equal(out_real, np.array([0, 0, 2, 0]))
+        np.testing.assert_equal(out_imag, np.array([0, 0, 0, -2]))
+        out_real, out_imag = fp_fft.butterfly_r2(out_real, out_imag, 2, 2, fpt, fpt, fpt)
+        np.testing.assert_equal(out_real, np.array([0, 0, 0, 4]))
+        np.testing.assert_equal(out_imag, np.array([0, 0, 0, 0]))
 
 if __name__ == '__main__':
     unittest.main()

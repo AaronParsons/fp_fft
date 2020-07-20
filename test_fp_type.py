@@ -95,6 +95,17 @@ class TestFixedPointType(unittest.TestCase):
         np.testing.assert_equal(data.astype(np.float)/4, fpt2.to_float(data))
         np.testing.assert_equal((data % 8).astype(np.float)/4, fpt3.to_float(data))
         np.testing.assert_equal(data.astype(np.float)/128, fpt4.to_float(data))
+        data = -np.arange(10)
+        np.testing.assert_equal(data.astype(np.float), fpt1.to_float(data))
+        np.testing.assert_equal(data.astype(np.float)/4, fpt2.to_float(data))
+        np.testing.assert_equal((-(-data % 8)).astype(np.float)/4, fpt3.to_float(data))
+        np.testing.assert_equal(data.astype(np.float)/128, fpt4.to_float(data))
+    def test_from_float(self):
+        fpt1 = fp_type.FixedPointType(8, 0)
+        fpt2 = fp_type.FixedPointType(8, 2)
+        data = np.array([0.51, 1, 2, 0.75, 0.1])
+        np.testing.assert_equal(fpt1.from_float(data), np.array([1, 1, 2, 1, 0]))
+        np.testing.assert_equal(fpt2.from_float(data), np.array([2, 4, 8, 3, 0]))
     def test_cast(self):
         fpt1 = fp_type.FixedPointType(8, 0)
         fpt2 = fp_type.FixedPointType(8, 2)
@@ -105,6 +116,16 @@ class TestFixedPointType(unittest.TestCase):
         np.testing.assert_equal(data >> 2, fpt1.cast(data, fpt_in=fpt2))
         np.testing.assert_equal(data % 8, fpt3.cast(data, fpt_in=fpt2))
         np.testing.assert_equal(data % 8, fpt3.cast(data))
+    def test_round(self):
+        fpt1 = fp_type.FixedPointType(8, 0)
+        fpt2 = fp_type.FixedPointType(8, 2)
+        data = fpt2.from_float(np.array([0.51, 1.2, 6, 0.23]))
+        np.testing.assert_equal(fpt2.round(data, fpt_in=fpt2), data)
+        np.testing.assert_equal(fpt1.round(data, fpt_in=fpt2), np.array([1, 1, 6, 0]))
+        data = np.array([-1, -255])
+        fpt1 = fp_type.FixedPointType(18,14)
+        fpt2 = fp_type.FixedPointType(8,7)
+        np.testing.assert_equal(fpt2.round(data, fpt_in=fpt1), np.array([0, -2]))
 
 if __name__ == '__main__':
     unittest.main()
