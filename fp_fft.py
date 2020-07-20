@@ -42,7 +42,9 @@ def twiddle_r2(stage, stages, fptype):
     mx = 2**(fptype.bit_width-1) - 1
     return tw_real.clip(-mx,mx), tw_imag.clip(-mx,mx)
 
-def butterfly_r2(d_real, d_imag, stage, stages, fptype_in, fptype_out, fptype_tw):
+def butterfly_r2(d_real, d_imag, stage, stages,
+                 fptype_in, fptype_out, fptype_tw,
+                 shift):
     top_real, bot_real = reshape_r2(d_real, stage)
     top_imag, bot_imag = reshape_r2(d_imag, stage)
     tw_real, tw_imag = twiddle_r2(stage, stages, fptype_tw)
@@ -50,38 +52,50 @@ def butterfly_r2(d_real, d_imag, stage, stages, fptype_in, fptype_out, fptype_tw
     btw_imag = bot_imag * tw_real + bot_real * tw_imag
     fptype_btw = fptype_in * fptype_tw  # promote fptype for tw product
     fptype_btw = fptype_btw + fptype_btw # promote fptype for tw sum
-    #print(top_real, fptype_in)
-    #print(top_imag, fptype_in)
-    #print()
-    #print(bot_real, fptype_in)
-    #print(bot_imag, fptype_in)
-    #print()
-    #print(fptype_btw.cast(top_real, fptype_in), fptype_btw)
-    #print(fptype_btw.cast(top_imag, fptype_in), fptype_btw)
-    #print()
-    #print(btw_real, fptype_btw)
-    #print(btw_imag, fptype_btw)
-    #print()
     tbtw_real = fptype_btw.cast(top_real, fptype_in) + btw_real
     tbtw_imag = fptype_btw.cast(top_imag, fptype_in) + btw_imag
     bbtw_real = fptype_btw.cast(top_real, fptype_in) - btw_real
     bbtw_imag = fptype_btw.cast(top_imag, fptype_in) - btw_imag
     fptype_tbtw = fptype_btw + fptype_btw # promote fptype for butterfly sum
-    #print(tbtw_real, fptype_tbtw)
-    #print(tbtw_imag, fptype_tbtw)
-    #print()
-    #print(bbtw_real, fptype_tbtw)
-    #print(bbtw_imag, fptype_tbtw)
-    #print()
     out_real = unreshape_r2(tbtw_real, bbtw_real, stage)
     out_imag = unreshape_r2(tbtw_imag, bbtw_imag, stage)
-    #print(out_real, fptype_tbtw)
-    #print(out_imag, fptype_tbtw)
-    #print()
-    #out_real = np.concatenate([tbtw_real, bbtw_real], axis=-1)
-    #out_imag = np.concatenate([tbtw_imag, bbtw_imag], axis=-1)
+    if shift:
+        fptype_tbtw.bin_point += 1
     out_real = fptype_out.round(out_real, fptype_tbtw)
     out_imag = fptype_out.round(out_imag, fptype_tbtw)
-    #print(out_real, fptype_out)
-    #print(out_imag, fptype_out)
     return out_real, out_imag
+
+def fft_r2(d_real, d_imag, stages, fptype_in, fptype_out, fptype_tw,
+           shifts=None):
+    if type(fptype_in) == FixedPointType:
+        fptype_in = [fptype_in] * stages
+    # fptype_in must be a FixedPointType or an iterable of length stages
+    assert(len(fptype_in) == stages)
+
+    if type(fptype_out) == FixedPointType:
+        fptype_out = [fptype_out] * stages
+    # fptype_out must be a FixedPointType or an iterable of length stages
+    assert(len(fptype_out) == stages)
+
+    if type(fptype_tw) == FixedPointType:
+        fptype_tw = [fptype_tw] * stages
+    # fptype_tw must be a FixedPointType or an iterable of length stages
+    assert(len(fptype_tw) == stages)
+
+    if shifts is None:
+        shifts = [0] * stages
+    # shift must either be none or iterable of length stages
+    assert(len(shifts) == stages)
+
+    # Do all the butterflies
+    out_real, out_imag = d_real, d_imag
+    for stage, ti, to, tt, shift in zip(range(1, stages+1),
+                                        fptype_in, fptype_out, fptype_tw,
+                                        shifts):
+        out_real, out_imag = butterfly_r2(out_real, out_imag,
+                                          stage, stages, ti, to, tt, shift)
+    
+    # Undo the bit-reversed ordering of output channels
+    unscramble = bit_reverse(np.arange(2**stages), stages)
+    return out_real[...,unscramble], out_imag[...,unscramble]
+        
