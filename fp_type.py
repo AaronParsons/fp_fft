@@ -28,17 +28,19 @@ class FixedPointType:
     def __repr__(self):
         return 'FixedPointType(%d,%d)' % (self.bit_width, self.bin_point)
     def _mask_bitwidth(self, data, bit_width=None):
+        assert(data.dtype == np.int32)
         if bit_width is None:
             bit_width = self.bit_width
-        data = np.where(data > 0, data % 2**bit_width,
-                                  -(-data % 2**bit_width)).astype(np.int)
-        return data
+        return (data << (32 - bit_width)) >> (32 - bit_width)
+        #data = np.where(data > 0, data % 2**(bit_width-1),
+        #                        -(-data % 2**(bit_width-1))).astype(np.int)
+        #return data
     def _downshift(self, data, bin_point=None):
         if bin_point is None:
             bin_point = self.bin_point
         # work-around bc downshifting negative numbers never goes to zero
         data = np.where(data > 0, data >> bin_point,
-                                  -(-data >> bin_point)).astype(np.int)
+                                  -(-data >> bin_point)).astype(np.int32)
         return data
     def to_float(self, data):
         '''Convert the provided integer or numpy integer array into
@@ -51,7 +53,7 @@ class FixedPointType:
         '''Convert the provided floating point number or numpy array into
         the its fixed-point representation according to the bit width and
         binary point of this data type.'''
-        data = np.around(data * 2**self.bin_point).astype(np.int)
+        data = np.around(data * 2**self.bin_point).astype(np.int32)
         data = self._mask_bitwidth(data)
         return data
     def cast(self, data, fpt_in=None):
@@ -73,7 +75,7 @@ class FixedPointType:
         to get the binary point right.'''
         if fpt_in is not None:
             lost_bits = fpt_in.bin_point - self.bin_point
-            rnd_off = self._mask_bitwidth(data, lost_bits)
+            rnd_off = data - (self._downshift(data,lost_bits) << lost_bits)
             rnd_off = self._downshift(rnd_off, lost_bits - 1)
             data = self.cast(data, fpt_in=fpt_in)
             data += rnd_off

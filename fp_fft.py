@@ -32,13 +32,14 @@ def bit_reverse(data, nbits):
         return 2**(nbits-1) * (data & 1) + bit_reverse(data >> 1, nbits-1)
 
 def twiddle_r2(stage, stages, fptype):
-    ind = np.arange(2**(stages-1))
+    ind = np.arange(2**(stages-1), dtype=np.int32)
     ind = bit_reverse(ind >> (stages - stage), stage-1)
     theta = -np.pi * FixedPointType(stage, stage-1).to_float(ind)
     tw_real = np.cos(theta)
     tw_imag = np.sin(theta)
-    tw_real = fptype.from_float(tw_real)
-    tw_imag = fptype.from_float(tw_imag)
+    mx = (2**(fptype.bit_width-1) - 1) / 2**(fptype.bit_width-1)
+    tw_real = fptype.from_float(tw_real.clip(-mx,mx))
+    tw_imag = fptype.from_float(tw_imag.clip(-mx,mx))
     mx = 2**(fptype.bit_width-1) - 1
     return tw_real.clip(-mx,mx), tw_imag.clip(-mx,mx)
 
