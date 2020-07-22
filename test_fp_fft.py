@@ -117,11 +117,18 @@ class TestFFT(unittest.TestCase):
     def test_fft_8pt_two_tone(self):
         d_real = np.array([1, 0,-1, 0, 1, 0,-1, 0], dtype=np.int32) + 1
         d_imag = np.array([0, 1, 0,-1, 0, 1, 0,-1], dtype=np.int32)
-        #fpt = FixedPointType(18, 17)
-        fpt = FixedPointType(8, 7)
+        fpt = FixedPointType(18, 17)
         shifts = np.array([0, 0, 0])
         out_real, out_imag = fp_fft.fft_r2(d_real, d_imag, 3, fpt, fpt, fpt, shifts)
         np.testing.assert_equal(out_real, np.array([8,0,8,0,0,0,0,0], dtype=np.int32))
+        np.testing.assert_equal(out_imag, np.array([0,0,0,0,0,0,0,0], dtype=np.int32))
+    def test_fft_8pt_dc_large(self):
+        d_real = np.array([65536] * 8, dtype=np.int32)
+        d_imag = np.array([0] * 8, dtype=np.int32)
+        fpt = FixedPointType(18, 17)
+        shifts = np.array([1, 1, 1])
+        out_real, out_imag = fp_fft.fft_r2(d_real, d_imag, 3, fpt, fpt, fpt, shifts)
+        np.testing.assert_equal(out_real, np.array([65536,0,0,0,0,0,0,0], dtype=np.int32))
         np.testing.assert_equal(out_imag, np.array([0,0,0,0,0,0,0,0], dtype=np.int32))
 
 if __name__ == '__main__':

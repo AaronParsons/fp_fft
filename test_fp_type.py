@@ -142,6 +142,11 @@ class TestFixedPointType(unittest.TestCase):
         fpt1 = fp_type.FixedPointType(18,14)
         fpt2 = fp_type.FixedPointType(8,7)
         np.testing.assert_equal(fpt2.round(data, fpt_in=fpt1), np.array([0, -2], dtype=np.int32))
+    def test_round_big(self):
+        fpt1 = fp_type.FixedPointType(38, 35)
+        fpt2 = fp_type.FixedPointType(18, 17)
+        d = np.array([17179803648], dtype=np.int64)
+        np.testing.assert_equal(fpt2.round(d, fpt_in=fpt1), np.array([2**16], dtype=np.int32))
 
 if __name__ == '__main__':
     unittest.main()

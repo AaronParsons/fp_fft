@@ -40,7 +40,7 @@ class FixedPointType:
             bin_point = self.bin_point
         # work-around bc downshifting negative numbers never goes to zero
         data = np.where(data > 0, data >> bin_point,
-                                  -(-data >> bin_point)).astype(np.int32)
+                                  -(-data >> bin_point))
         return data
     def to_float(self, data):
         '''Convert the provided integer or numpy integer array into

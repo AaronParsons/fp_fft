@@ -48,10 +48,13 @@ def butterfly_r2(d_real, d_imag, stage, stages,
     top_real, bot_real = reshape_r2(d_real, stage)
     top_imag, bot_imag = reshape_r2(d_imag, stage)
     tw_real, tw_imag = twiddle_r2(stage, stages, fptype_tw)
-    btw_real = bot_real * tw_real - bot_imag * tw_imag
-    btw_imag = bot_imag * tw_real + bot_real * tw_imag
     fptype_btw = fptype_in * fptype_tw  # promote fptype for tw product
     fptype_btw = fptype_btw + fptype_btw # promote fptype for tw sum
+    if fptype_btw.bit_width > 32:
+        bot_real = bot_real.astype(np.int64)
+        bot_imag = bot_imag.astype(np.int64)
+    btw_real = bot_real * tw_real - bot_imag * tw_imag
+    btw_imag = bot_imag * tw_real + bot_real * tw_imag
     tbtw_real = fptype_btw.cast(top_real, fptype_in) + btw_real
     tbtw_imag = fptype_btw.cast(top_imag, fptype_in) + btw_imag
     bbtw_real = fptype_btw.cast(top_real, fptype_in) - btw_real
