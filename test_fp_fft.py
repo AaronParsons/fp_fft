@@ -88,6 +88,20 @@ class TestFFT(unittest.TestCase):
         out_real, out_imag = fp_fft.butterfly_r2(out_real, out_imag, 2, 2, fpt, fpt, fpt, False)
         np.testing.assert_equal(out_real, np.array([0, 0, 0, 4], dtype=np.int32))
         np.testing.assert_equal(out_imag, np.array([0, 0, 0, 0], dtype=np.int32))
+    def test_butterfly_4pt_8_7(self):
+        d_real = np.array([1, 1, 1, 1], dtype=np.int32)
+        d_imag = np.array([0, 0, 0, 0], dtype=np.int32)
+        fpt = FixedPointType(8, 7)
+        out_real, out_imag = fp_fft.butterfly_r2(d_real, d_imag, 1, 2, fpt, fpt, fpt, False)
+        np.testing.assert_equal(out_real, np.array([2, 2, 0, 0], dtype=np.int32))
+        np.testing.assert_equal(out_imag, np.array([0, 0, 0, 0], dtype=np.int32))
+    def test_butterfly_4pt_18_17(self):
+        d_real = np.array([1, 1, 1, 1], dtype=np.int32)
+        d_imag = np.array([0, 0, 0, 0], dtype=np.int32)
+        fpt = FixedPointType(18, 17)
+        out_real, out_imag = fp_fft.butterfly_r2(d_real, d_imag, 1, 2, fpt, fpt, fpt, False)
+        np.testing.assert_equal(out_real, np.array([2, 2, 0, 0], dtype=np.int32))
+        np.testing.assert_equal(out_imag, np.array([0, 0, 0, 0], dtype=np.int32))
     def test_fft_8pt(self):
         d_real = np.array([7, 7, 7, 7, 7, 7, 7, 7], dtype=np.int32)
         d_imag = np.array([0, 0, 0, 0, 0, 0, 0, 0], dtype=np.int32)
@@ -100,6 +114,15 @@ class TestFFT(unittest.TestCase):
         out_real, out_imag = fp_fft.fft_r2(d_real, d_imag, 3, fpt, fpt, fpt, shifts)
         np.testing.assert_equal(out_real, np.array([56,0,0,0,0,0,0,0], dtype=np.int32))
         np.testing.assert_equal(out_imag, np.array([0 ,0,0,0,0,0,0,0], dtype=np.int32))
+    def test_fft_8pt_two_tone(self):
+        d_real = np.array([1, 0,-1, 0, 1, 0,-1, 0], dtype=np.int32) + 1
+        d_imag = np.array([0, 1, 0,-1, 0, 1, 0,-1], dtype=np.int32)
+        #fpt = FixedPointType(18, 17)
+        fpt = FixedPointType(8, 7)
+        shifts = np.array([0, 0, 0])
+        out_real, out_imag = fp_fft.fft_r2(d_real, d_imag, 3, fpt, fpt, fpt, shifts)
+        np.testing.assert_equal(out_real, np.array([8,0,8,0,0,0,0,0], dtype=np.int32))
+        np.testing.assert_equal(out_imag, np.array([0,0,0,0,0,0,0,0], dtype=np.int32))
 
 if __name__ == '__main__':
     unittest.main()

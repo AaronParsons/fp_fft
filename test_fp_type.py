@@ -118,6 +118,13 @@ class TestFixedPointType(unittest.TestCase):
                                 fpt3.cast(data, fpt_in=fpt2))
         np.testing.assert_equal(np.array([0,1,2,3,-4,-3,-2,-1,0,1], dtype=np.int32), 
                                 fpt3.cast(data))
+    def test_cast_bigger_than_int(self):
+        fpt1 = fp_type.FixedPointType(18, 17)
+        fpt2 = fp_type.FixedPointType(37, 34)
+        data = np.array([2**17-1], dtype=np.int32)
+        data = fpt2.cast(data, fpt_in=fpt1)
+        self.assertEqual(data.dtype, np.int64)
+        np.testing.assert_equal(data[0], (2**17-1) * 2**17)
     def test_mask_bitwidth(self):
         fpt = fp_type.FixedPointType(8,7)
         d = np.array([0, 1, 3, 7, 15, 31, 63, 127], dtype=np.int32)

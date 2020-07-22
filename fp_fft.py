@@ -40,8 +40,7 @@ def twiddle_r2(stage, stages, fptype):
     mx = (2**(fptype.bit_width-1) - 1) / 2**(fptype.bit_width-1)
     tw_real = fptype.from_float(tw_real.clip(-mx,mx))
     tw_imag = fptype.from_float(tw_imag.clip(-mx,mx))
-    mx = 2**(fptype.bit_width-1) - 1
-    return tw_real.clip(-mx,mx), tw_imag.clip(-mx,mx)
+    return tw_real, tw_imag
 
 def butterfly_r2(d_real, d_imag, stage, stages,
                  fptype_in, fptype_out, fptype_tw,

@@ -28,13 +28,13 @@ class FixedPointType:
     def __repr__(self):
         return 'FixedPointType(%d,%d)' % (self.bit_width, self.bin_point)
     def _mask_bitwidth(self, data, bit_width=None):
-        assert(data.dtype == np.int32)
         if bit_width is None:
             bit_width = self.bit_width
-        return (data << (32 - bit_width)) >> (32 - bit_width)
-        #data = np.where(data > 0, data % 2**(bit_width-1),
-        #                        -(-data % 2**(bit_width-1))).astype(np.int)
-        #return data
+        if data.dtype == np.int64:
+            return (data << (64 - bit_width)) >> (64 - bit_width)
+        else:
+            assert(data.dtype == np.int32)
+            return (data << (32 - bit_width)) >> (32 - bit_width)
     def _downshift(self, data, bin_point=None):
         if bin_point is None:
             bin_point = self.bin_point
@@ -61,12 +61,16 @@ class FixedPointType:
         the fixed-point representation corresponding to this data type.
         Optionally provide the fixed-point data type of the orignal array
         to get the binary point right.'''
+        if self.bit_width > 32:
+            data = data.astype(np.int64) # promote to enough digits
         if fpt_in is not None:
             if fpt_in.bin_point > self.bin_point:
                 data = self._downshift(data, fpt_in.bin_point - self.bin_point)
             else:
                 data = data << (self.bin_point - fpt_in.bin_point)
         data = self._mask_bitwidth(data)
+        if self.bit_width <= 32:
+            data = data.astype(np.int32) # drop extra digits if unneeded
         return data
     def round(self, data, fpt_in=None):
         '''Cast the provided integer or numpy integer array into
