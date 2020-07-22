@@ -130,6 +130,16 @@ class TestFFT(unittest.TestCase):
         out_real, out_imag = fp_fft.fft_r2(d_real, d_imag, 3, fpt, fpt, fpt, shifts)
         np.testing.assert_equal(out_real, np.array([65536,0,0,0,0,0,0,0], dtype=np.int32))
         np.testing.assert_equal(out_imag, np.array([0,0,0,0,0,0,0,0], dtype=np.int32))
+    def test_fft_batch(self):
+        NSTAGES = 3
+        NCHAN = 2**NSTAGES
+        NBATCH = 1
+        d_real = np.array([[1] * NCHAN] * NBATCH, dtype=np.int32)
+        d_imag = np.array([[0] * NCHAN] * NBATCH, dtype=np.int32)
+        fpt = FixedPointType(18, 17)
+        out_real, out_imag = fp_fft.fft_r2(d_real, d_imag, NSTAGES, fpt, fpt, fpt )
+        np.testing.assert_equal(out_real[...,0], np.array([NCHAN] * NBATCH, dtype=np.int32))
+        np.testing.assert_equal(out_real[...,1:], 0)
 
 if __name__ == '__main__':
     unittest.main()

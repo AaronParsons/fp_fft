@@ -4,8 +4,8 @@ from fp_type import FixedPointType
 def reshape_r2(data, stage):
     shape = data.shape
     data.shape = shape[:-1] + (2**stage, -1)
-    top = data[...,0::2,:]
-    bot = data[...,1::2,:]
+    top = data[...,0::2,:].copy() # inefficient, but avoids non-contiguous
+    bot = data[...,1::2,:].copy() # inefficient, but avoids non-contiguous
     if len(shape) == 1:
         top, bot = top.flatten(), bot.flatten()
     else:
@@ -89,6 +89,10 @@ def fft_r2(d_real, d_imag, stages, fptype_in, fptype_out, fptype_tw,
         shifts = [0] * stages
     # shift must either be none or iterable of length stages
     assert(len(shifts) == stages)
+
+    # dimensions of data must agree with stages
+    assert(d_real.shape[-1] == 2**stages)
+    assert(d_imag.shape[-1] == 2**stages)
 
     # Do all the butterflies
     out_real, out_imag = d_real, d_imag
