@@ -53,7 +53,11 @@ class FixedPointType:
         '''Convert the provided floating point number or numpy array into
         the its fixed-point representation according to the bit width and
         binary point of this data type.'''
-        data = np.around(data * 2**self.bin_point).astype(np.int32)
+        if self.bit_width > 32:
+            dtype = np.int64
+        else:
+            dtype = np.int32
+        data = np.around(data * 2**self.bin_point).astype(dtype)
         data = self._mask_bitwidth(data)
         return data
     def cast(self, data, fpt_in=None):

@@ -106,6 +106,9 @@ class TestFixedPointType(unittest.TestCase):
         data = np.array([0.51, 1, 2, 0.75, 0.1])
         np.testing.assert_equal(fpt1.from_float(data), np.array([1, 1, 2, 1, 0], dtype=np.int32))
         np.testing.assert_equal(fpt2.from_float(data), np.array([2, 4, 8, 3, 0], dtype=np.int32))
+        fpt3 = fp_type.FixedPointType(37,34)
+        data = np.array([-0.0661468505859375])
+        np.testing.assert_equal(fpt3.from_float(data), -1136394240)
     def test_cast(self):
         fpt1 = fp_type.FixedPointType(8, 0)
         fpt2 = fp_type.FixedPointType(8, 2)
