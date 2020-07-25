@@ -89,3 +89,16 @@ class FixedPointType:
             data += rnd_off
         data = self._mask_bitwidth(data)
         return data
+    def round_to_even(self, data, fpt_in=None):
+        '''Cast the provided integer or numpy integer array into
+        the fixed-point representation corresponding to this data type.
+        Optionally provide the fixed-point data type of the orignal array
+        to get the binary point right.'''
+        if fpt_in is not None:
+            lost_bits = fpt_in.bin_point - self.bin_point
+            rnd_off = data - (self._downshift(data,lost_bits) << lost_bits)
+            rnd_off = self._downshift(rnd_off, lost_bits - 1)
+            data = self.cast(data, fpt_in=fpt_in)
+            data = np.where(data % 2 == 1, data + rnd_off, data) # only round up odd values
+        data = self._mask_bitwidth(data)
+        return data

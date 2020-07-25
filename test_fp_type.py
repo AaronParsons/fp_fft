@@ -145,6 +145,16 @@ class TestFixedPointType(unittest.TestCase):
         fpt1 = fp_type.FixedPointType(18,14)
         fpt2 = fp_type.FixedPointType(8,7)
         np.testing.assert_equal(fpt2.round(data, fpt_in=fpt1), np.array([0, -2], dtype=np.int32))
+    def test_round_to_even(self):
+        fpt1 = fp_type.FixedPointType(8, 0)
+        fpt2 = fp_type.FixedPointType(8, 2)
+        data = fpt2.from_float(np.array([0.51, 1.2, 1.51, 0.23]))
+        np.testing.assert_equal(fpt2.round_to_even(data, fpt_in=fpt2), data)
+        np.testing.assert_equal(fpt1.round_to_even(data, fpt_in=fpt2), np.array([0, 1, 2, 0], dtype=np.int32))
+        data = np.array([-1, -255], dtype=np.int32)
+        fpt1 = fp_type.FixedPointType(18,14)
+        fpt2 = fp_type.FixedPointType(8,7)
+        np.testing.assert_equal(fpt2.round_to_even(data, fpt_in=fpt1), np.array([0, -2], dtype=np.int32))
     def test_round_big(self):
         fpt1 = fp_type.FixedPointType(38, 35)
         fpt2 = fp_type.FixedPointType(18, 17)
